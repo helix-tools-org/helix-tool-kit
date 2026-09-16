@@ -1,0 +1,31 @@
+/*
+ * hub-backend-config.h.example - Template for the Hub's private
+ * Supabase project ref
+ *
+ * Copy this file to hub-backend-config.h (which is gitignored) and fill
+ * in your own Supabase project ref. The Hub dock's injected JS
+ * (push-to-studio-script.h) watches Supabase's own localStorage session
+ * key, which is named "sb-<project-ref>-auth-token" — without the real
+ * project ref here, auth session capture will never find a session to
+ * read, and other HelixTools plugins that rely on it (clip, overlays)
+ * won't have credentials to work with.
+ *
+ * Copyright (C) 2026 HelixTools
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#define HUB_SUPABASE_PROJECT_ID "your-supabase-project-id"

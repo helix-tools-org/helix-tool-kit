@@ -1,0 +1,44 @@
+/*
+ * clip-backend-config.h.example - Template for the private backend
+ * credentials Clip Creation needs
+ *
+ * Copy this file to clip-backend-config.h (which is gitignored) and fill
+ * in your own values. Clip Creation needs a backend that:
+ *   1. Stores each user's Rumble API URL, queryable via a REST API scoped
+ *      to that user (the default implementation uses a Supabase table
+ *      named rumble_credentials with a user_id column and RLS policies
+ *      keyed on a caller-supplied bearer token — see
+ *      ClipManager::fetchRumbleApiUrl() in clip-manager.cpp).
+ *   2. Accepts POST requests to create a clip, given a video ID, a
+ *      duration in seconds, and a user ID (see
+ *      ClipManager::createClip() in clip-manager.cpp for the exact
+ *      request/response shape expected).
+ *
+ * Without a real, compatible backend behind these values, Clip Creation
+ * compiles and loads fine but every clip attempt will simply fail (network
+ * errors logged to the OBS log) — same as helixtools-restream before it
+ * had a destinations editor.
+ *
+ * Copyright (C) 2026 HelixTools
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#define SUPABASE_PROJECT_ID  "your-supabase-project-id"
+#define SUPABASE_BASE_URL    "https://" SUPABASE_PROJECT_ID ".supabase.co"
+#define SUPABASE_ANON_KEY    "your-supabase-anon-key"
+
+#define CLIP_API_URL         "https://your-clip-backend.example.com/api/v1/clip/clips/create"

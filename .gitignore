@@ -1,0 +1,33 @@
+# Build outputs
+build/
+Output/
+*.obj
+*.lib
+*.dll
+*.exe
+*.pdb
+*.exp
+*.ilk
+
+# IDE
+.vs/
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+*.sln.docstates
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log
+
+# Local session notes (not for the repo)
+SESSION_NOTES.md
+
+# Private backend credentials (see each .h.example template)
+helixtools-clip/src/clip-backend-config.h
+helixtools-hub/src/hub-backend-config.h
