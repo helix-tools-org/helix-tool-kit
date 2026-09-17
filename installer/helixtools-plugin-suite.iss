@@ -5,7 +5,7 @@
 ; SPDX-License-Identifier: GPL-2.0-or-later
 
 #define MyAppName "Helix ToolKit"
-#define MyAppVersion "0.5.1"
+#define MyAppVersion "0.6.0"
 #define MyAppPublisher "HelixTools"
 #define MyAppURL "https://helixtools.org"
 

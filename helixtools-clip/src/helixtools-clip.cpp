@@ -33,6 +33,7 @@
 #include <QDebug>
 #include <QMainWindow>
 #include <QMetaObject>
+#include <QStatusBar>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -350,20 +351,28 @@ void HelixToolsClip::playFeedbackSound()
 
 void HelixToolsClip::showStatusMessage(const QString &message)
 {
-    // --- HELIXTOOLS MODIFICATION START ---
-    // Description: Show message on the main window status bar via QMetaObject
-    // since this plugin is out-of-tree and can't directly call OBSBasic methods
+    /* OBS's main window is a real QMainWindow, and its status bar is a
+     * standard QStatusBar reachable via QMainWindow::statusBar() — no
+     * OBS-specific API needed, so this works on vanilla OBS Studio (an
+     * earlier version of this called a "ShowStatusBarMessage" slot that
+     * only exists on a privately patched OBS fork; on a stock install
+     * that call just silently no-ops, since the method doesn't exist). */
     void *mainPtr = obs_frontend_get_main_window();
     if (mainPtr) {
         QMainWindow *mainWindow = static_cast<QMainWindow *>(mainPtr);
-        QMetaObject::invokeMethod(mainWindow, "ShowStatusBarMessage",
-                                  Qt::QueuedConnection,
-                                  Q_ARG(QString, message));
+        if (QStatusBar *statusBar = mainWindow->statusBar()) {
+            QMetaObject::invokeMethod(
+                statusBar,
+                [statusBar, message]() {
+                    statusBar->clearMessage();
+                    statusBar->showMessage(message, 10000);
+                },
+                Qt::QueuedConnection);
+        }
     }
 
     emit statusMessage(message);
     blog(LOG_INFO, "[helixtools-clip] %s", qUtf8Printable(message));
-    // --- HELIXTOOLS MODIFICATION END ---
 }
 
 void HelixToolsClip::startPolling()

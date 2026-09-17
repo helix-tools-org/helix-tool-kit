@@ -341,4 +341,4 @@ Public License instead of this License.
 
 Need Help? support@helixtools.org
 Built for Use in OBS
-Helix Tool Kit Repo: https://github.com/HelixTools/helix-toolkit (placeholder - update once published)
+Helix Tool Kit Repo: https://github.com/helix-tools-org/helix-tool-kit
