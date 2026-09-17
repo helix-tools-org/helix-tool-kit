@@ -5,7 +5,7 @@
 ; SPDX-License-Identifier: GPL-2.0-or-later
 
 #define MyAppName "Helix ToolKit"
-#define MyAppVersion "0.6.0"
+#define MyAppVersion "0.6.1"
 #define MyAppPublisher "HelixTools"
 #define MyAppURL "https://helixtools.org"
 
@@ -99,6 +99,10 @@ Source: "{#MusicRoot}\obs-plugins\64bit\helixtools-music.dll"; DestDir: "{app}\o
 
 Source: "{#ClipRoot}\obs-plugins\64bit\helixtools-clip.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion recursesubdirs; Components: clip
 Source: "{#ClipRoot}\obs-plugins\64bit\*.dll"; DestDir: "{app}\obs-plugins\64bit"; Excludes: "helixtools-*.dll"; Flags: ignoreversion skipifsourcedoesntexist; Components: clip
+; Qt's Schannel TLS backend plugin, matching the Qt6 build OBS Studio
+; itself bundles (see helixtools-clip\vendor\NOTE.md) — without this,
+; helixtools-clip's HTTPS calls fail with "No functional TLS backend".
+Source: "..\helixtools-clip\vendor\qschannelbackend.dll"; DestDir: "{app}\bin\64bit\tls"; Flags: ignoreversion; Components: clip
 
 Source: "{#MacrosRoot}\obs-plugins\64bit\helixtools-macros.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: macros
 Source: "{#MacrosRoot}\obs-plugins\64bit\*.dll"; DestDir: "{app}\obs-plugins\64bit"; Excludes: "helixtools-*.dll"; Flags: ignoreversion skipifsourcedoesntexist; Components: macros
@@ -125,6 +129,7 @@ Type: files; Name: "{app}\obs-plugins\64bit\helixtools-overlays.dll"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-restream.dll"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-music.dll"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-clip.dll"
+Type: files; Name: "{app}\bin\64bit\tls\qschannelbackend.dll"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-macros.dll"
 Type: filesandordirs; Name: "{app}\data\obs-plugins\helixtools-macros"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-hub.dll"
