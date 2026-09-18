@@ -1,3 +1,9 @@
+/* Vendored verbatim from obsproject/obs-studio's obs-browser plugin
+ * (plugins/obs-browser/panel/browser-panel.hpp), licensed
+ * GPL-2.0-or-later. Not original HelixTools code — reproduced here as
+ * the public interface obs-browser exposes for embedding CEF panels
+ * (used to implement this plugin's dock UI). No modifications made. */
+
 #pragma once
 
 #include <obs-module.h>
