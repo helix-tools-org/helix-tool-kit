@@ -19,6 +19,7 @@
 
 #include "helixtools-clip.h"
 #include "clip-manager.h"
+#include "clip-settings-dialog.h"
 
 #include <obs-module.h>
 #include <obs-frontend-api.h>
@@ -34,6 +35,12 @@
 #include <QMainWindow>
 #include <QMetaObject>
 #include <QStatusBar>
+#include <QWidget>
+#include <QLabel>
+#include <QVBoxLayout>
+#include <QTimer>
+#include <QGraphicsOpacityEffect>
+#include <QPropertyAnimation>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -89,6 +96,8 @@ HelixToolsClip::HelixToolsClip()
             this, [this](const QString &clipId, const QString &) {
                 if (showToast)
                     showStatusMessage(QString("Clip created successfully! (ID: %1)").arg(clipId));
+                if (playSound)
+                    playFeedbackSound();
                 if (showOverlay) {
                     /* Send clip event to Hub alert system via
                        helixtools-hub proc handler (if available) */
@@ -172,6 +181,9 @@ void HelixToolsClip::saveSettings()
     config_set_bool(config, "Clips", SETTINGS_PLAY_SOUND, playSound);
     config_set_string(config, "Clips", SETTINGS_CUSTOM_SOUND,
                       customSoundPath.toUtf8().constData());
+    config_set_bool(config, "Clips", SETTINGS_SHOW_TOAST, showToast);
+    config_set_bool(config, "Clips", SETTINGS_SHOW_OVERLAY, showOverlay);
+    config_save(config);
     // --- HELIXTOOLS MODIFICATION END ---
 }
 
@@ -371,8 +383,79 @@ void HelixToolsClip::showStatusMessage(const QString &message)
         }
     }
 
+    if (showToast)
+        showToastNotification(message);
+
     emit statusMessage(message);
     blog(LOG_INFO, "[helixtools-clip] %s", qUtf8Printable(message));
+}
+
+void HelixToolsClip::showToastNotification(const QString &message)
+{
+    /* OBS's status bar text is easy to miss at a glance, so this pops up a
+     * small floating panel over the bottom-right of the main window as
+     * well — frameless, translucent, self-closing, no external toast
+     * library needed. */
+    void *mainPtr = obs_frontend_get_main_window();
+    if (!mainPtr)
+        return;
+    QMainWindow *mainWindow = static_cast<QMainWindow *>(mainPtr);
+
+    QMetaObject::invokeMethod(
+        mainWindow,
+        [mainWindow, message]() {
+            auto *toast = new QWidget(mainWindow, Qt::Tool |
+                                                   Qt::FramelessWindowHint |
+                                                   Qt::WindowStaysOnTopHint);
+            toast->setAttribute(Qt::WA_ShowWithoutActivating);
+            toast->setAttribute(Qt::WA_DeleteOnClose);
+            toast->setAttribute(Qt::WA_StyledBackground);
+            toast->setStyleSheet(
+                "QWidget { background-color: rgba(32, 32, 36, 235);"
+                "border: 1px solid rgba(90, 200, 130, 200);"
+                "border-radius: 6px; }");
+
+            auto *label = new QLabel(message, toast);
+            label->setStyleSheet(
+                "color: white; font-size: 13px; padding: 10px 16px; background: transparent;");
+            label->setWordWrap(true);
+
+            auto *layout = new QVBoxLayout(toast);
+            layout->setContentsMargins(0, 0, 0, 0);
+            layout->addWidget(label);
+
+            toast->adjustSize();
+            int width = qMin(360, qMax(220, label->sizeHint().width() + 32));
+            toast->setFixedWidth(width);
+            toast->adjustSize();
+
+            QRect area = mainWindow->geometry();
+            int x = area.x() + area.width() - toast->width() - 24;
+            int y = area.y() + area.height() - toast->height() - 48;
+            toast->move(x, y);
+
+            auto *effect = new QGraphicsOpacityEffect(toast);
+            toast->setGraphicsEffect(effect);
+            effect->setOpacity(0.0);
+            toast->show();
+
+            auto *fadeIn = new QPropertyAnimation(effect, "opacity", toast);
+            fadeIn->setDuration(200);
+            fadeIn->setStartValue(0.0);
+            fadeIn->setEndValue(1.0);
+            fadeIn->start(QAbstractAnimation::DeleteWhenStopped);
+
+            QTimer::singleShot(3500, toast, [toast, effect]() {
+                auto *fadeOut = new QPropertyAnimation(effect, "opacity", toast);
+                fadeOut->setDuration(400);
+                fadeOut->setStartValue(1.0);
+                fadeOut->setEndValue(0.0);
+                QObject::connect(fadeOut, &QPropertyAnimation::finished,
+                                  toast, &QWidget::close);
+                fadeOut->start(QAbstractAnimation::DeleteWhenStopped);
+            });
+        },
+        Qt::QueuedConnection);
 }
 
 void HelixToolsClip::startPolling()
@@ -425,6 +508,18 @@ void HelixToolsClip::SetCustomSound(const QString &path)
     saveSettings();
 }
 
+void HelixToolsClip::SetShowToast(bool show)
+{
+    showToast = show;
+    saveSettings();
+}
+
+void HelixToolsClip::SetShowOverlay(bool show)
+{
+    showOverlay = show;
+    saveSettings();
+}
+
 /* OBS Plugin Entry Points */
 
 bool obs_module_load()
@@ -442,6 +537,9 @@ bool obs_module_load()
         new HelixToolsClip();
     }
     // --- HELIXTOOLS MODIFICATION END ---
+
+    helixtools_clip_init_menu();
+
     return true;
 }
 

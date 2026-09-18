@@ -93,6 +93,14 @@ public:
     void SetShowStatus(bool show);
     void SetPlaySound(bool play);
     void SetCustomSound(const QString &path);
+    void SetShowToast(bool show);
+    void SetShowOverlay(bool show);
+
+    bool getShowStatus() const { return showStatus; }
+    bool getPlaySound() const { return playSound; }
+    bool getShowToast() const { return showToast; }
+    bool getShowOverlay() const { return showOverlay; }
+    QString getCustomSound() const { return customSoundPath; }
 
 signals:
     void clipCreated(const QString &clipId, const QString &mp4Url);
@@ -107,6 +115,7 @@ private:
 
     void playFeedbackSound();
     void showStatusMessage(const QString &message);
+    void showToastNotification(const QString &message);
 
     ClipManager *manager;
 

@@ -14,6 +14,7 @@ add_compile_definitions(HELIXTOOLS_CLIP_VERSION="${PROJECT_VERSION}")
 add_library(helixtools-clip MODULE
     src/helixtools-clip.cpp
     src/clip-manager.cpp
+    src/clip-settings-dialog.cpp
 )
 
 target_link_libraries(helixtools-clip PRIVATE
