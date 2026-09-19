@@ -93,6 +93,7 @@ static void teardownMixerAudioSource(void)
 	obs_set_output_source(MUSIC_MIXER_CHANNEL, nullptr);
 	obs_source_release(g_musicAudioSource);
 	g_musicAudioSource = nullptr;
+	g_audioSourceCreated = false;
 }
 
 static void onFrontendEvent(enum obs_frontend_event event, void *)
@@ -103,6 +104,19 @@ static void onFrontendEvent(enum obs_frontend_event event, void *)
 	 * table at that point. FINISHED_LOADING is the documented safe
 	 * point for a plugin to add its own global/channel sources. */
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
+		createMixerAudioSource();
+	} else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
+		/* Channel 7 isn't one of the channels OBS itself resets
+		 * around a collection switch (only its own mic/desktop
+		 * audio + scene/transition channels are). Left alone, this
+		 * source survives libobs's scene-data-clear pass as an
+		 * untracked leftover ("Not all sources were cleared when
+		 * clearing scene data: - HelixTools Music" in the log),
+		 * which libobs's teardown path isn't designed to hit. Tear
+		 * it down before the switch so the clear pass finds nothing
+		 * of ours. */
+		teardownMixerAudioSource();
+	} else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
 		createMixerAudioSource();
 	} else if (event == OBS_FRONTEND_EVENT_EXIT) {
 		/* Tear down here, not in obs_module_unload(): EXIT fires
