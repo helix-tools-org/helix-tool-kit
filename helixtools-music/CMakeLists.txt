@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 cmake_minimum_required(VERSION 3.28)
-project(helixtools-music VERSION 0.2.0 LANGUAGES C CXX)
+project(helixtools-music VERSION 0.2.6 LANGUAGES C CXX)
 
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)

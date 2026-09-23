@@ -74,6 +74,7 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
+#include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -118,11 +119,29 @@ void MusicManager::createAudioSource()
 	if (audioSource)
 		return;
 
-	obs_data_t *settings = obs_data_create();
-	obs_data_set_bool(settings, "is_local_file", false);
-	obs_data_set_bool(settings, "looping", false);
-	obs_data_set_bool(settings, "close_when_inactive", false);
+	/* The source is a real, named scene item now (see the header
+	 * comment), so it's persisted as part of the scene collection and
+	 * already exists on disk after the first run. Reuse it by name
+	 * instead of always creating a new one — obs_source_create() would
+	 * otherwise collide with the persisted source's name and get
+	 * silently auto-numbered by OBS ("HelixTools Music 2", "3", ...),
+	 * leaving a new orphaned duplicate source + mixer channel on every
+	 * OBS restart. */
+	audioSource = obs_get_source_by_name(MUSIC_AUDIO_SOURCE_NAME);
+	if (audioSource) {
+		applyBaseSettings(audioSource);
 
+		injectedScenes.clear();
+		syncScenes();
+
+		lastLoadedTrackId.clear();
+		lastPlaybackStatus.clear();
+
+		pollTimer->start(POLL_INTERVAL_MS);
+		return;
+	}
+
+	obs_data_t *settings = obs_data_create();
 	audioSource = obs_source_create("ffmpeg_source", MUSIC_AUDIO_SOURCE_NAME,
 					 settings, nullptr);
 	obs_data_release(settings);
@@ -132,10 +151,12 @@ void MusicManager::createAudioSource()
 		return;
 	}
 
+	applyBaseSettings(audioSource);
+
 	injectedScenes.clear();
 	syncScenes();
 
-	lastTrackId.clear();
+	lastLoadedTrackId.clear();
 	lastPlaybackStatus.clear();
 
 	/* Not gated on a cached user ID already existing: the dock's auth
@@ -147,11 +168,60 @@ void MusicManager::createAudioSource()
 	pollTimer->start(POLL_INTERVAL_MS);
 }
 
+void MusicManager::applyBaseSettings(obs_source_t *source)
+{
+	obs_data_t *settings = obs_source_get_settings(source);
+	obs_data_set_bool(settings, "is_local_file", false);
+	obs_data_set_bool(settings, "looping", false);
+	obs_data_set_bool(settings, "close_when_inactive", false);
+	/* Explicitly restored to true (ffmpeg_source's own default), not left
+	 * alone: a source persisted by an earlier, buggy build of this
+	 * plugin may already have this saved as false in the scene
+	 * collection file, and obs_source_get_settings() above returns
+	 * exactly that persisted value if untouched. obs-ffmpeg's
+	 * ffmpeg_source_deactivate() only calls media_playback_stop() when
+	 * this is true — since this source lives in every scene, "deactivate"
+	 * only actually fires when OBS itself is tearing every scene down
+	 * (shutdown), so leaving this false permanently defeats that
+	 * stop-before-destroy safety net, letting the decode thread keep
+	 * pushing audio into audio_callback() while OBS's main thread is
+	 * concurrently freeing the source in ClearSceneData — the exact crash
+	 * hit before. */
+	obs_data_set_bool(settings, "restart_on_activate", true);
+	/* Also explicitly cleared, not left as whatever was persisted: for a
+	 * non-local-file ffmpeg_source (true here — this always plays a
+	 * remote URL, never a local path), *every* settings update
+	 * unconditionally reopens and starts playback (obs-ffmpeg always
+	 * treats a streaming input's settings change as "should restart"),
+	 * regardless of restart_on_activate or any pause we issue afterward.
+	 * Reusing a source from a prior session with the last real track's
+	 * URL still saved in "input" meant this call alone was enough to
+	 * kick off playback of a stale track — and if that first attempt hit
+	 * the network before it was ready, ffmpeg_source's own reconnect
+	 * thread would retry ~10s later (its default reconnect_delay_sec)
+	 * and start playing anyway, bypassing whatever pause we'd already
+	 * sent. Clearing "input" here means there is nothing left to
+	 * reconnect to — only pollOverlayData()'s own explicit, freshly
+	 * polled track URL should ever cause this source to actually play. */
+	obs_data_set_string(settings, "input", "");
+	obs_source_update(source, settings);
+	obs_data_release(settings);
+}
+
 void MusicManager::injectIntoScene(obs_scene_t *scene, const char *sceneName)
 {
 	if (injectedScenes.count(sceneName))
 		return;
 	injectedScenes.insert(sceneName);
+
+	/* audioSource may have just been reused from an existing, persisted
+	 * source (see createAudioSource()) whose scene items were already
+	 * loaded from the scene collection file — in that case an item for
+	 * it already exists here from a prior session and must not be
+	 * duplicated. injectedScenes alone doesn't catch this since it's
+	 * reset to empty at the start of every createAudioSource() call. */
+	if (obs_scene_find_source(scene, obs_source_get_name(audioSource)))
+		return;
 
 	obs_sceneitem_t *item = obs_scene_add(scene, audioSource);
 	if (!item) {
@@ -218,7 +288,7 @@ void MusicManager::pollOverlayData()
 	QUrl url(QString(MUSIC_SUPABASE_BASE_URL) + "/rest/v1/overlay_data");
 	QUrlQuery query;
 	query.addQueryItem("user_id", "eq." + QString::fromStdString(userId));
-	query.addQueryItem("select", "track_id,audio_url,playback_status,progress_ms");
+	query.addQueryItem("select", "track_id,audio_url,playback_status,progress_ms,updated_at");
 	query.addQueryItem("order", "updated_at.desc");
 	query.addQueryItem("limit", "1");
 	url.setQuery(query);
@@ -257,14 +327,44 @@ void MusicManager::onPollReply()
 	std::string audioUrl = row.value("audio_url").toString().toStdString();
 	std::string playbackStatus = row.value("playback_status").toString().toStdString();
 	int progressMs = row.value("progress_ms").toInt();
+	QDateTime updatedAt = QDateTime::fromString(row.value("updated_at").toString(), Qt::ISODateWithMs);
 
 	if (audioUrl.empty())
 		return;
 
-	if (trackId != lastTrackId) {
-		lastTrackId = trackId;
-		lastPlaybackStatus.clear();
+	/* The dock only writes this row while its own page is open, so a row
+	 * left over from a session that ended without ever writing "paused"
+	 * (tab/browser closed mid-track, PC slept, etc.) would otherwise
+	 * read back as permanently "playing" and auto-start audio the moment
+	 * this plugin next polls it — with nobody having pressed play. If
+	 * the row hasn't been touched recently, treat it as abandoned and
+	 * never resume playback from it, regardless of its stored status. */
+	constexpr qint64 STALE_MS = 10000;
+	bool stale = !updatedAt.isValid() ||
+		     updatedAt.msecsTo(QDateTime::currentDateTimeUtc()) > STALE_MS;
+	if (stale && playbackStatus == "playing")
+		playbackStatus = "paused";
 
+	/* lastLoadedTrackId tracks what's actually been pushed into the
+	 * source's "input" — not merely the last track_id seen from a poll —
+	 * so that a track deferred earlier (seen while paused/stale, so never
+	 * loaded) still gets loaded the moment it's genuinely playing, even
+	 * though its track_id was already "seen" on an earlier tick. */
+	if (playbackStatus == "playing" && trackId != lastLoadedTrackId) {
+		lastLoadedTrackId = trackId;
+		lastPlaybackStatus = playbackStatus;
+
+		/* Only ever push a new "input" when the end state we actually
+		 * want is playing. For a non-local-file ffmpeg_source (always
+		 * true here — this plays a remote URL), obs_source_update()
+		 * unconditionally reopens and starts playback regardless of
+		 * anything else, and if that first open attempt fails (e.g.
+		 * network not ready yet), ffmpeg_source's own reconnect thread
+		 * retries on its own schedule (~10s by default) and starts
+		 * playing once it succeeds — with no memory of any pause
+		 * issued in between. Never setting "input" for a track we
+		 * don't yet want playing means there's nothing left for a
+		 * delayed reconnect to surprise us with. */
 		obs_data_t *settings = obs_source_get_settings(audioSource);
 		obs_data_set_string(settings, "input", audioUrl.c_str());
 		obs_source_update(audioSource, settings);
@@ -272,6 +372,34 @@ void MusicManager::onPollReply()
 
 		if (progressMs > 0)
 			obs_source_media_set_time(audioSource, progressMs);
+
+		obs_source_media_play_pause(audioSource, false);
+
+		/* Diagnostic logging in an earlier build of this function
+		 * (obs_source_media_get_state()) showed the source reporting
+		 * "PLAYING" continuously through a switch that was actually
+		 * silent — so the state API doesn't reflect this at all. The
+		 * user found the real fix by hand: toggling the Mixer's audio
+		 * monitoring for this source off and back on brings the sound
+		 * back, with no change to play/pause state. That points at
+		 * OBS's separate local monitor-output stream getting stuck on
+		 * the abrupt format/timestamp discontinuity a live "input" swap
+		 * creates, independent of the actual program/stream output —
+		 * so this likely never reached viewers at all, only the
+		 * streamer's own local monitoring. Automating exactly that
+		 * manual fix here: drop monitoring to none and restore whatever
+		 * it was a moment later, forcing OBS to reinitialize that
+		 * monitor stream against the new track cleanly. */
+		enum obs_monitoring_type monitoring = obs_source_get_monitoring_type(audioSource);
+		if (monitoring != OBS_MONITORING_TYPE_NONE) {
+			obs_source_set_monitoring_type(audioSource, OBS_MONITORING_TYPE_NONE);
+			QTimer::singleShot(250, this, [this, trackId, monitoring]() {
+				if (!audioSource || trackId != lastLoadedTrackId)
+					return;
+				obs_source_set_monitoring_type(audioSource, monitoring);
+			});
+		}
+		return;
 	}
 
 	if (playbackStatus != lastPlaybackStatus) {

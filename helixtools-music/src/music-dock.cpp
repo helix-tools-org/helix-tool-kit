@@ -64,6 +64,38 @@ namespace {
  */
 static const char *DISABLE_POPUPS_SCRIPT =
 	"(function(){ window.open = function(){ return null; }; })();";
+
+/*
+ * The dock is a plain, unmuted browser widget, so the page's own
+ * <audio>/<video> elements play through the system's normal audio
+ * output — captured live by "Desktop Audio" like any other app. That
+ * was fine before MusicManager existed (it was the only real audio
+ * path), but now MusicManager (music-manager.cpp) separately decodes
+ * and plays the same track again as a native ffmpeg_source mixer
+ * channel, mirroring the dock's playback_status for the Mixer fader to
+ * actually do something. With the page itself left unmuted, both paths
+ * play for real at once — Desktop Audio capturing the page's own sound
+ * and the Mixer channel decoding it independently — so viewers hear the
+ * track twice (confirmed via the ~1.5s gap between them, matching
+ * MusicManager's own poll interval). Muting every media element here
+ * makes the native mixer channel the sole real audio path, matching the
+ * original intent ("the Mixer fader ... controls the same audio you
+ * hear from the dock" — SESSION_NOTES.md 2026-09-22 — which assumed
+ * there'd only ever be one real playing instance). A MutationObserver
+ * is needed because the player mounts a fresh <audio> element per
+ * track rather than reusing one.
+ */
+static const char *MUTE_AUDIO_SCRIPT =
+	"(function(){"
+	"  function muteAll(){"
+	"    document.querySelectorAll('audio,video').forEach(function(el){"
+	"      el.muted = true; el.volume = 0;"
+	"    });"
+	"  }"
+	"  muteAll();"
+	"  new MutationObserver(muteAll).observe(document.documentElement, "
+	"    { childList: true, subtree: true });"
+	"})();";
 } // namespace
 
 MusicDock::MusicDock(QCef *cef_, QWidget *parent) : QWidget(parent), cef(cef_)
@@ -81,7 +113,7 @@ MusicDock::MusicDock(QCef *cef_, QWidget *parent) : QWidget(parent), cef(cef_)
 					     true);
 
 	browser = cef->create_widget(this, MUSIC_PLAYER_URL, cookies);
-	browser->setStartupScript(std::string(DISABLE_POPUPS_SCRIPT) +
+	browser->setStartupScript(std::string(DISABLE_POPUPS_SCRIPT) + MUTE_AUDIO_SCRIPT +
 				   HELIXTOOLS_MUSIC_AUTH_SCRIPT);
 	layout->addWidget(browser);
 

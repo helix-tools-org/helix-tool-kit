@@ -60,12 +60,13 @@ private slots:
 private:
 	std::string cachedUserId();
 	void injectIntoScene(obs_scene_t *scene, const char *sceneName);
+	void applyBaseSettings(obs_source_t *source);
 
 	QNetworkAccessManager *networkManager;
 	QTimer *pollTimer;
 	obs_source_t *audioSource = nullptr;
 	std::set<std::string> injectedScenes;
 
-	std::string lastTrackId;
+	std::string lastLoadedTrackId;
 	std::string lastPlaybackStatus;
 };
