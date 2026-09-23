@@ -19,6 +19,7 @@
 
 #include "helixtools-music.h"
 #include "music-dock.h"
+#include "music-manager.h"
 #include "vendor/browser-panel.hpp"
 
 #include <obs-frontend-api.h>
@@ -28,108 +29,43 @@ OBS_MODULE_USE_DEFAULT_LOCALE("helixtools-music", "en-US")
 
 MODULE_EXPORT const char *obs_module_description(void)
 {
-	return "HelixTools Music dock + mixer channel";
+	return "HelixTools Music dock";
 }
 
 static MusicDock *g_dock = nullptr;
-static obs_source_t *g_musicAudioSource = nullptr;
-static bool g_audioSourceCreated = false;
-
-static void createMixerAudioSource(void)
-{
-	if (g_audioSourceCreated)
-		return;
-	g_audioSourceCreated = true;
-
-	obs_data_t *settings = obs_data_create();
-	obs_data_set_string(settings, "url", MUSIC_PLAYER_URL);
-	obs_data_set_int(settings, "width", 1);
-	obs_data_set_int(settings, "height", 1);
-	obs_data_set_bool(settings, "shutdown", false);
-	obs_data_set_int(settings, "fps", 5);
-
-	/* A real (public) source, not private — obs_set_output_source
-	 * below requires that to make it show up in the Audio Mixer, the
-	 * same way Desktop Audio/Mic do despite not being scene items
-	 * either.
-	 *
-	 * IMPORTANT: assigning a source to ANY global output channel
-	 * (obs_set_output_source) does not just wire up audio — libobs's
-	 * main render loop (obs_render_main_texture) walks every channel
-	 * 0-63 each frame and calls obs_source_video_render() on whatever
-	 * occupies it, the exact mechanism that draws the active program
-	 * scene on channel 0. A video-capable source on channel 7 was
-	 * therefore being painted directly onto the main canvas every
-	 * frame with no scene item backing it — unselectable, undeletable,
-	 * fixed in place regardless of scene (this was the floating panel
-	 * bug; it was never a CEF popup window). A real Custom Browser
-	 * Dock never hits this because it's a plain Qt/CEF widget that's
-	 * never assigned to an output channel at all.
-	 *
-	 * 1x1 keeps the CEF view (and therefore the visible render) too
-	 * small to see anything meaningful — audio capture doesn't depend
-	 * on the video target's size. */
-	g_musicAudioSource = obs_source_create("browser_source",
-					       MUSIC_AUDIO_SOURCE_NAME, settings,
-					       nullptr);
-	obs_data_release(settings);
-
-	if (!g_musicAudioSource) {
-		blog(LOG_ERROR,
-		     "[helixtools-music] Failed to create audio source (obs-browser missing?)");
-		return;
-	}
-
-	obs_set_output_source(MUSIC_MIXER_CHANNEL, g_musicAudioSource);
-	blog(LOG_INFO, "[helixtools-music] Mixer channel %d ready",
-	     MUSIC_MIXER_CHANNEL);
-}
-
-static void teardownMixerAudioSource(void)
-{
-	if (!g_musicAudioSource)
-		return;
-
-	obs_set_output_source(MUSIC_MIXER_CHANNEL, nullptr);
-	obs_source_release(g_musicAudioSource);
-	g_musicAudioSource = nullptr;
-	g_audioSourceCreated = false;
-}
+static MusicManager *g_musicManager = nullptr;
 
 static void onFrontendEvent(enum obs_frontend_event event, void *)
 {
-	/* Creating a public source (needed for the Mixer channel) any
-	 * earlier than this — obs_module_post_load included — races OBS's
-	 * own scene-collection load, which expects a clean global source
-	 * table at that point. FINISHED_LOADING is the documented safe
-	 * point for a plugin to add its own global/channel sources. */
+	/* Creating a public source any earlier than this — obs_module_post_load
+	 * included — races OBS's own scene-collection load, which expects a
+	 * clean global source table at that point. FINISHED_LOADING is the
+	 * documented safe point for a plugin to add its own sources. */
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
-		createMixerAudioSource();
+		g_musicManager->createAudioSource();
 	} else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
-		/* Channel 7 isn't one of the channels OBS itself resets
-		 * around a collection switch (only its own mic/desktop
-		 * audio + scene/transition channels are). Left alone, this
-		 * source survives libobs's scene-data-clear pass as an
-		 * untracked leftover ("Not all sources were cleared when
-		 * clearing scene data: - HelixTools Music" in the log),
-		 * which libobs's teardown path isn't designed to hit. Tear
-		 * it down before the switch so the clear pass finds nothing
-		 * of ours. */
-		teardownMixerAudioSource();
+		/* The shared obs_source_t isn't owned by any one scene, so
+		 * nothing tears it down automatically on a collection switch
+		 * the way a normal scene item's source would be. Release it
+		 * before the switch (its per-scene items go with the
+		 * collection being torn down either way). */
+		g_musicManager->teardownAudioSource();
 	} else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
-		createMixerAudioSource();
+		g_musicManager->createAudioSource();
+	} else if (event == OBS_FRONTEND_EVENT_SCENE_LIST_CHANGED) {
+		/* Catches a scene created after this collection already
+		 * loaded — syncScenes() only touches scenes it hasn't
+		 * injected into yet, so this never fights a deliberate
+		 * removal from an already-handled scene. */
+		g_musicManager->syncScenes();
 	} else if (event == OBS_FRONTEND_EVENT_EXIT) {
-		/* Tear down here, not in obs_module_unload(): EXIT fires
-		 * while Qt/the GPU thread are still fully alive, whereas
-		 * obs_module_unload() runs much later during final module
-		 * teardown, where releasing a browser_source has hung
-		 * before (see NOTE.md history). */
-		teardownMixerAudioSource();
+		g_musicManager->teardownAudioSource();
 	}
 }
 
 bool obs_module_load(void)
 {
+	g_musicManager = new MusicManager();
 	obs_frontend_add_event_callback(onFrontendEvent, nullptr);
 	blog(LOG_INFO, "[helixtools-music] Plugin loaded (v%s)",
 	     HELIXTOOLS_MUSIC_VERSION);
@@ -151,7 +87,8 @@ void obs_module_unload(void)
 	obs_frontend_remove_event_callback(onFrontendEvent, nullptr);
 	helixtools_music_shutdown_dock();
 	/* Safety net in case OBS_FRONTEND_EVENT_EXIT was somehow missed. */
-	teardownMixerAudioSource();
+	delete g_musicManager;
+	g_musicManager = nullptr;
 	blog(LOG_INFO, "[helixtools-music] Plugin unloaded");
 }
 

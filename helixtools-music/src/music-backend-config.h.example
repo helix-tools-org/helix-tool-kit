@@ -1,0 +1,42 @@
+/*
+ * music-backend-config.h.example - Template for the Music project's
+ * private Supabase project ref
+ *
+ * Copy this file to music-backend-config.h (which is gitignored) and
+ * fill in the real values.
+ *
+ * MUSIC_SUPABASE_PROJECT_ID is used two ways:
+ *   1. The dock's injected JS (music-auth-script.h) watches Supabase's
+ *      own localStorage session key, named
+ *      "sb-<project-ref>-auth-token" — without the real project ref
+ *      here, it will never find a session to read a user ID from.
+ *   2. MusicManager polls the project's REST API directly with this
+ *      project's anon key.
+ *
+ * MUSIC_SUPABASE_ANON_KEY only needs read access — overlay_data has a
+ * public SELECT policy (the same one the web overlay itself relies on
+ * for unauthenticated OBS browser sources), so no user access/refresh
+ * token is ever needed here. Only the bare user ID is captured from
+ * the dock (see music-auth-script.h) to scope the query.
+ *
+ * Copyright (C) 2026 HelixTools
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#pragma once
+
+#define MUSIC_SUPABASE_PROJECT_ID  "your-supabase-project-id"
+#define MUSIC_SUPABASE_BASE_URL    "https://" MUSIC_SUPABASE_PROJECT_ID ".supabase.co"
+#define MUSIC_SUPABASE_ANON_KEY    "your-supabase-anon-key"

@@ -1,23 +1,31 @@
 /*
- * helixtools-music.h - HelixTools Music dock + mixer channel (standalone)
+ * helixtools-music.h - HelixTools Music dock (standalone)
  *
- * Two separate things, both pointed at the same page
- * (helixtools.org/music/home):
- *   - A plain browser dock (QCefWidget, via the public browser-panel
- *     API — the same proven-safe pattern helixtools-hub/-social use)
- *     for browsing, logging in, and controlling playback.
- *   - A private "browser_source" instance, pinned to an OBS audio
- *     mixer channel via obs_set_output_source, so its audio shows up
- *     as a persistent Mixer control exactly like Desktop Audio/Mic —
- *     no scene involvement needed.
+ * A plain browser dock (QCefWidget, via the public browser-panel API —
+ * the same proven-safe pattern helixtools-hub/-social use) for
+ * browsing, logging in, and controlling playback at
+ * helixtools.org/music/home.
  *
- * These are two independent browser instances, not one shared browser
- * rendered twice — an earlier attempt at sharing a single instance
- * (rendering an obs_source directly into a custom GPU-backed dock
- * widget) had a confirmed rendering bug where its surface bled onto
- * the Scene Preview canvas. See NOTE.md for that history. This design
- * trades perfect dock/stream playback-state sync for something that
- * can't touch OBS's rendering pipeline at all.
+ * This previously pinned a second, independent "browser_source"
+ * instance to a global OBS mixer channel so its audio would show up as
+ * a persistent Mixer control. Removed: it was a separate,
+ * unauthenticated CEF instance with no playback-state sync to the
+ * dock, so its fader controlled silent/logged-out audio and served no
+ * real function. It was also the source of the
+ * OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING/_CHANGED freeze/crash
+ * fixed 2026-09-18 (see SESSION_NOTES.md).
+ *
+ * Replaced by MusicManager (music-manager.cpp): a native ffmpeg_source
+ * driven by polling the overlay_data Supabase table the dock already
+ * writes to for the website's own now-playing overlay. A second
+ * attempt at a global mixer channel (this time with ffmpeg_source
+ * instead of browser_source) hit the exact same "renders on the
+ * canvas" bug for a different reason — see music-manager.cpp's header
+ * comment — so this instead adds the source as a real, 0x0-scaled
+ * scene item to every scene. MusicManager still handles the
+ * scene-collection-switch teardown/recreation of the shared
+ * obs_source_t itself (its scene *items* are torn down by OBS's own
+ * lifecycle since they're normal scene content now).
  *
  * Copyright (C) 2026 HelixTools
  *

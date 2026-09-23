@@ -3,17 +3,18 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 cmake_minimum_required(VERSION 3.28)
-project(helixtools-music VERSION 0.1.0 LANGUAGES C CXX)
+project(helixtools-music VERSION 0.2.0 LANGUAGES C CXX)
 
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
 
 add_compile_definitions(HELIXTOOLS_MUSIC_VERSION="${PROJECT_VERSION}")
 
 add_library(helixtools-music MODULE
     src/helixtools-music.cpp
     src/music-dock.cpp
+    src/music-manager.cpp
 )
 
 target_link_libraries(helixtools-music PRIVATE
@@ -21,7 +22,12 @@ target_link_libraries(helixtools-music PRIVATE
     OBS::obs-frontend-api
     Qt6::Core
     Qt6::Widgets
+    Qt6::Network
 )
+
+if(WIN32)
+    target_link_libraries(helixtools-music PRIVATE advapi32)
+endif()
 
 target_include_directories(helixtools-music PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src

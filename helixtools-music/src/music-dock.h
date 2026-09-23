@@ -33,7 +33,12 @@ public:
 	explicit MusicDock(QCef *cef, QWidget *parent = nullptr);
 	~MusicDock() override;
 
+private slots:
+	void onTitleChanged(const QString &title);
+
 private:
+	void handleAuthCommand(const QString &json);
+
 	QCef *cef;
 	QCefCookieManager *cookies = nullptr;
 	QCefWidget *browser = nullptr;

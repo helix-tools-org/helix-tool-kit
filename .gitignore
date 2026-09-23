@@ -31,3 +31,4 @@ SESSION_NOTES.md
 # Private backend credentials (see each .h.example template)
 helixtools-clip/src/clip-backend-config.h
 helixtools-hub/src/hub-backend-config.h
+helixtools-music/src/music-backend-config.h
