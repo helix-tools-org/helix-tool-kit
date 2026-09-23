@@ -25,10 +25,18 @@ Desktop.ini
 # Logs
 *.log
 
-# Local session notes (not for the repo)
+# Local session notes / planning docs (not for the repo)
 SESSION_NOTES.md
+PLAN.md
 
 # Private backend credentials (see each .h.example template)
 helixtools-clip/src/clip-backend-config.h
 helixtools-hub/src/hub-backend-config.h
 helixtools-music/src/music-backend-config.h
+
+# Platform logos (trademarked, not for redistribution — see
+# helixtools-dashboard/data/logos/README.md). Never auto-staged even
+# if dropped in locally for personal use.
+helixtools-dashboard/data/logos/*.png
+helixtools-dashboard/data/logos/*.svg
+helixtools-dashboard/data/logos/*.jpg

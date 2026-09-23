@@ -5,7 +5,7 @@
 ; SPDX-License-Identifier: GPL-2.0-or-later
 
 #define MyAppName "Helix ToolKit"
-#define MyAppVersion "0.6.3"
+#define MyAppVersion "0.7.7"
 #define MyAppPublisher "HelixTools"
 #define MyAppURL "https://helixtools.org"
 
@@ -46,6 +46,7 @@
 #define SocialRoot    "..\helixtools-social\build\rundir"
 #define RumbleStudioRoot "..\helixtools-rumble-studio\build\rundir"
 #define RestreamRoot  "..\helixtools-restream\build\rundir"
+#define DashboardRoot "..\helixtools-dashboard\build\rundir"
 
 [Setup]
 AppId={{6D3F9A21-7C4B-4E8D-9A1F-3B5C7D2E8F4A}
@@ -89,6 +90,7 @@ Name: "hub";      Description: "HelixTools Hub Dock (Push to Studio)";          
 Name: "social";   Description: "HelixTools Social Media Dock";                  Types: full custom
 Name: "rumblestudio"; Description: "Rumble Studio Dock";                        Types: full custom
 Name: "restream";     Description: "Restream (multi-destination RTMP)";         Types: full custom
+Name: "dashboard";    Description: "Dashboard (Twitch/YouTube/Kick/Blaze/VPZone selector dock)"; Types: full custom
 
 [Files]
 Source: "{#ServiceRoot}\obs-plugins\64bit\helixtools-service.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: service
@@ -116,6 +118,9 @@ Source: "{#RumbleStudioRoot}\obs-plugins\64bit\helixtools-rumble-studio.dll"; De
 
 Source: "{#RestreamRoot}\obs-plugins\64bit\helixtools-restream.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: restream
 
+Source: "{#DashboardRoot}\obs-plugins\64bit\helixtools-dashboard.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: dashboard
+Source: "{#DashboardRoot}\data\obs-plugins\helixtools-dashboard\*"; DestDir: "{app}\data\obs-plugins\helixtools-dashboard"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Components: dashboard
+
 ; License
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "HelixTools-Plugins-LICENSE.txt"; Flags: ignoreversion
 
@@ -135,6 +140,8 @@ Type: filesandordirs; Name: "{app}\data\obs-plugins\helixtools-macros"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-hub.dll"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-social.dll"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-rumble-studio.dll"
+Type: files; Name: "{app}\obs-plugins\64bit\helixtools-dashboard.dll"
+Type: filesandordirs; Name: "{app}\data\obs-plugins\helixtools-dashboard"
 
 [Code]
 // Look for a vanilla OBS Studio install via the same registry keys OBS's
