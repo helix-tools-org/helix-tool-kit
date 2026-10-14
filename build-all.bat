@@ -34,6 +34,8 @@ REM garbage exit code (MSB6006) on some Windows builds, which also breaks
 REM CMake's compiler detection. Nothing here needs incremental-build
 REM dependency tracking, so turn it off.
 set TrackFileAccess=false
+REM Incremental links (.ilk) hit the same failure on rebuilds, so every
+REM build links non-incrementally (see CMAKE_SHARED_LINKER_FLAGS below).
 
 set PLUGIN=%1
 if "%PLUGIN%"=="" (
@@ -45,6 +47,7 @@ cd %PLUGIN%
 %CMAKE% -S . -B build -G "Visual Studio 17 2022" -A x64 ^
   -DCMAKE_PREFIX_PATH="%PREFIX%" ^
   -DCMAKE_MODULE_PATH="%MODULE_PATH%" ^
-  -DCMAKE_C_FLAGS="/FS" -DCMAKE_CXX_FLAGS="/FS"
+  -DCMAKE_C_FLAGS="/FS" -DCMAKE_CXX_FLAGS="/FS" ^
+  -DCMAKE_SHARED_LINKER_FLAGS="/INCREMENTAL:NO"
 if errorlevel 1 exit /b 1
 %CMAKE% --build build --config RelWithDebInfo -- /m

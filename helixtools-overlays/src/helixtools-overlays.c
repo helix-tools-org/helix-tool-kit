@@ -36,14 +36,14 @@ bool obs_module_load(void)
 		struct obs_source_info info = {0};
 		info.id = overlay_defs[i].source_id;
 		info.type = OBS_SOURCE_TYPE_INPUT;
-		/* Deliberately NOT OBS_SOURCE_CAP_DISABLED: that flag hides the
-		 * type from the native "Add Source" (+) menu, which also means a
-		 * source pushed from the Hub could never be found again to re-add
-		 * or add as "existing" later. Visible types are grouped in that
-		 * menu by the "HelixTools:" name prefix (see overlay_get_name()). */
+		/* OBS_SOURCE_CAP_DISABLED hides these types from the native "Add
+		 * Source" (+) menu. Push to Studio (helixtools-hub) now creates
+		 * plain browser sources, so these types only remain registered so
+		 * sources saved by earlier versions keep loading. */
 		info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO |
 				    OBS_SOURCE_CUSTOM_DRAW |
-				    OBS_SOURCE_INTERACTION;
+				    OBS_SOURCE_INTERACTION |
+				    OBS_SOURCE_CAP_DISABLED;
 		info.get_name = overlay_get_name;
 		info.create = overlay_create;
 		info.destroy = overlay_destroy;

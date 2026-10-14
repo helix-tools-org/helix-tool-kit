@@ -24,7 +24,6 @@
 #include "helixtools-overlays.h"
 
 #include <util/dstr.h>
-#include <stdio.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -376,18 +375,7 @@ static void overlay_update_browser(struct overlay_source *os)
 const char *overlay_get_name(void *type_data)
 {
 	const struct helixtools_overlay_def *def = type_data;
-
-	/* Prefix so all of these sort together in OBS's Add Source menu.
-	 * get_name must return a stable pointer, so cache one string per
-	 * def (def points into the overlay_defs array). */
-	static char names[128][96];
-	size_t idx = (size_t)(def - overlay_defs);
-	if (idx >= 128 || idx >= NUM_OVERLAY_DEFS)
-		return def->display_name;
-	if (!names[idx][0])
-		snprintf(names[idx], sizeof(names[idx]), "HelixTools: %s",
-			 def->display_name);
-	return names[idx];
+	return def->display_name;
 }
 
 void *overlay_create(obs_data_t *settings, obs_source_t *source)

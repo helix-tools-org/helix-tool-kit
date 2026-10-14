@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 cmake_minimum_required(VERSION 3.28)
-project(helixtools-hub VERSION 0.1.0 LANGUAGES C CXX)
+project(helixtools-hub VERSION 0.1.1 LANGUAGES C CXX)
 
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)

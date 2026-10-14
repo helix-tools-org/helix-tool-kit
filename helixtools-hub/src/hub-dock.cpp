@@ -171,13 +171,11 @@ void HubDock::handlePushCommand(const QString &json)
 	std::string typePath = extractOverlayType(url);
 	const overlay_type_entry *entry = findOverlayType(typePath);
 
-	if (!entry) {
-		blog(LOG_WARNING,
-		     "[helixtools-hub] Push to Studio: unknown overlay type '%s' (url: %s)",
-		     typePath.c_str(), url);
-		obs_data_release(cmd);
-		return;
-	}
+	/* Unknown overlay types still get added as a plain 1080p browser
+	 * source, so new Hub overlays work without a plugin update. */
+	const int width = entry ? entry->width : 1920;
+	const int height = entry ? entry->height : 1080;
+	const char *defaultName = entry ? entry->display_name : "HelixTools Overlay";
 
 	obs_source_t *sceneSource = obs_frontend_get_current_scene();
 	if (!sceneSource) {
@@ -188,30 +186,32 @@ void HubDock::handlePushCommand(const QString &json)
 	}
 
 	obs_scene_t *scene = obs_scene_from_source(sceneSource);
-	const char *sourceName = (name && *name) ? name : entry->display_name;
+	const char *sourceName = (name && *name) ? name : defaultName;
 
-	/* Pass the exact URL captured from the page as "custom_url" (which
-	 * overlay-source.c's overlay_build_url() always prefers over its
-	 * own auto-generated one). Several overlay types — Scroller, Media
-	 * Looper, Slot, the black-background Multichat variant — bake
-	 * extra config into query params that only exist in this captured
-	 * URL, not in the plugin's bare per-userId default. */
+	/* Create a plain OBS browser source pointed at the exact URL
+	 * captured from the page. Using the stock "browser_source" type means
+	 * the source shows up where users expect it (Add Source > Browser >
+	 * Add Existing) and keeps working even if helixtools-overlays isn't
+	 * installed. The captured URL already carries every query param the
+	 * overlay needs (Scroller, Media Looper, Slot, etc.). */
 	obs_data_t *settings = obs_data_create();
-	obs_data_set_string(settings, "custom_url", url);
+	obs_data_set_string(settings, "url", url);
+	obs_data_set_int(settings, "width", width);
+	obs_data_set_int(settings, "height", height);
 
 	obs_source_t *source =
-		obs_source_create(entry->source_id, sourceName, settings, nullptr);
+		obs_source_create("browser_source", sourceName, settings, nullptr);
 	obs_data_release(settings);
 	if (source) {
 		obs_scene_add(scene, source);
 		obs_source_release(source);
 		blog(LOG_INFO,
 		     "[helixtools-hub] Push to Studio: added '%s' (%s)",
-		     sourceName, entry->source_id);
+		     sourceName, typePath.c_str());
 	} else {
 		blog(LOG_ERROR,
-		     "[helixtools-hub] Push to Studio: failed to create source '%s'",
-		     entry->source_id);
+		     "[helixtools-hub] Push to Studio: failed to create browser source '%s'",
+		     sourceName);
 	}
 
 	obs_source_release(sceneSource);
