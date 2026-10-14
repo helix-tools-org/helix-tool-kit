@@ -14,7 +14,8 @@ as a standalone installer for a vanilla (unmodified) OBS Studio install.
 | `helixtools-macros` | Hotkey action-sequence macro engine |
 | `helixtools-hub` | HelixTools Hub dock (Push to Studio) |
 | `helixtools-social` | Social media browser dock |
-| `helixtools-rumble-studio` | Rumble Studio browser dock |
+| `helixtools-dashboard` | Streaming dashboards dock (Rumble Studio, Twitch, YouTube, Kick, Blaze, VPZone) |
+| `helixtools-rumble-studio` | Standalone Rumble Studio browser dock (superseded by `helixtools-dashboard`; not packaged in the installer) |
 | `helixtools-restream` | Multi-RTMP restreaming output (not currently packaged in the installer — no destinations UI yet) |
 
 ## Building

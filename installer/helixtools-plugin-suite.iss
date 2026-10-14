@@ -5,7 +5,7 @@
 ; SPDX-License-Identifier: GPL-2.0-or-later
 
 #define MyAppName "Helix ToolKit"
-#define MyAppVersion "0.7.7"
+#define MyAppVersion "0.7.8"
 #define MyAppPublisher "HelixTools"
 #define MyAppURL "https://helixtools.org"
 
@@ -44,7 +44,6 @@
 #define MacrosRoot    "..\helixtools-macros\build\rundir"
 #define HubRoot       "..\helixtools-hub\build\rundir"
 #define SocialRoot    "..\helixtools-social\build\rundir"
-#define RumbleStudioRoot "..\helixtools-rumble-studio\build\rundir"
 #define RestreamRoot  "..\helixtools-restream\build\rundir"
 #define DashboardRoot "..\helixtools-dashboard\build\rundir"
 
@@ -88,7 +87,6 @@ Name: "clip";     Description: "Clip Creation (hotkey clipping)";               
 Name: "macros";   Description: "Macro Engine (hotkey action sequences)";        Types: full custom
 Name: "hub";      Description: "HelixTools Hub Dock (Push to Studio)";          Types: full custom
 Name: "social";   Description: "HelixTools Social Media Dock";                  Types: full custom
-Name: "rumblestudio"; Description: "Rumble Studio Dock";                        Types: full custom
 Name: "restream";     Description: "Restream (multi-destination RTMP)";         Types: full custom
 Name: "dashboard";    Description: "Dashboard (Twitch/YouTube/Kick/Blaze/VPZone selector dock)"; Types: full custom
 
@@ -114,8 +112,6 @@ Source: "{#HubRoot}\obs-plugins\64bit\helixtools-hub.dll"; DestDir: "{app}\obs-p
 
 Source: "{#SocialRoot}\obs-plugins\64bit\helixtools-social.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: social
 
-Source: "{#RumbleStudioRoot}\obs-plugins\64bit\helixtools-rumble-studio.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: rumblestudio
-
 Source: "{#RestreamRoot}\obs-plugins\64bit\helixtools-restream.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: restream
 
 Source: "{#DashboardRoot}\obs-plugins\64bit\helixtools-dashboard.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: dashboard
@@ -127,6 +123,12 @@ Source: "..\LICENSE"; DestDir: "{app}"; DestName: "HelixTools-Plugins-LICENSE.tx
 [Registry]
 Root: HKLM; Subkey: "SOFTWARE\HelixTools\PluginSuite"; ValueType: string; ValueName: "OBSInstallDir"; ValueData: "{app}"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "SOFTWARE\HelixTools\PluginSuite"; ValueType: string; ValueName: "Version"; ValueData: "{#MyAppVersion}"; Flags: uninsdeletekey
+
+[InstallDelete]
+; helixtools-rumble-studio was dropped from the suite in 0.7.8 (the
+; Dashboard dock already covers Rumble Studio) — remove the stale DLL
+; from installs upgraded from an earlier version.
+Type: files; Name: "{app}\obs-plugins\64bit\helixtools-rumble-studio.dll"
 
 [UninstallDelete]
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-service.dll"
