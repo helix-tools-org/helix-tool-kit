@@ -117,8 +117,11 @@ Source: "{#RestreamRoot}\obs-plugins\64bit\helixtools-restream.dll"; DestDir: "{
 Source: "{#DashboardRoot}\obs-plugins\64bit\helixtools-dashboard.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion; Components: dashboard
 Source: "{#DashboardRoot}\data\obs-plugins\helixtools-dashboard\*"; DestDir: "{app}\data\obs-plugins\helixtools-dashboard"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; Components: dashboard
 
-; License
+; License and third-party notices (Qt's TLS plugin is LGPL-3.0, so its
+; license text and source pointers ship with the installer)
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "HelixTools-Plugins-LICENSE.txt"; Flags: ignoreversion
+Source: "..\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; DestName: "HelixTools-Third-Party-Notices.txt"; Flags: ignoreversion
+Source: "..\licenses\*"; DestDir: "{app}\HelixTools-Licenses"; Flags: ignoreversion
 
 [Registry]
 Root: HKLM; Subkey: "SOFTWARE\HelixTools\PluginSuite"; ValueType: string; ValueName: "OBSInstallDir"; ValueData: "{app}"; Flags: uninsdeletekey
@@ -131,6 +134,7 @@ Root: HKLM; Subkey: "SOFTWARE\HelixTools\PluginSuite"; ValueType: string; ValueN
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-rumble-studio.dll"
 
 [UninstallDelete]
+Type: filesandordirs; Name: "{app}\HelixTools-Licenses"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-service.dll"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-overlays.dll"
 Type: files; Name: "{app}\obs-plugins\64bit\helixtools-restream.dll"

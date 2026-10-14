@@ -55,3 +55,9 @@ Studio install. Build every plugin first, then compile the script.
 GPLv2-or-later. See `LICENSE`. These plugins communicate with OBS
 Studio (libobs) through its public plugin API and are independent works,
 not derived from OBS Studio itself.
+
+Third-party code and files that are included or shipped in the installer
+(OBS's browser panel header, obs-websocket's API header, and Qt's
+LGPL-3.0 TLS plugin) are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+Helix ToolKit is not affiliated with or endorsed by the OBS Project.
