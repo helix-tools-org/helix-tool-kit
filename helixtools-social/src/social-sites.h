@@ -1,9 +1,6 @@
 /*
  * social-sites.h - Sidebar entries for the Social Media dock.
  *
- * Same list as an integrated studio app's socialMediaSites
- * table (obs-studio/frontend/widgets/OBSBasic_Browser.cpp).
- *
  * Copyright (C) 2026 HelixTools
  *
  * This program is free software; you can redistribute it and/or modify

@@ -9,11 +9,9 @@
  *      read them from Credential Manager without their own login UI
  *      (see the "Auth session capture" block near the bottom).
  *
- * Ported from an integrated studio app's equivalent script (in
- * obs-studio/frontend/widgets/OBSBasic_Browser.cpp), adjusted for the
- * current Hub site:
+ * Written for the current Hub site:
  *   - Domain: helixtools.org/overlay
- *   - Path gate: /hub (was /dashboard) — matches this site's router
+ *   - Path gate: /hub — matches this site's router
  *   - Card detection: this site's Card component renders
  *     "rounded-lg bg-primary/10 ..." with no .border/.bg-card classes,
  *     so cards are matched by ".rounded-lg" + containing an <h3>,

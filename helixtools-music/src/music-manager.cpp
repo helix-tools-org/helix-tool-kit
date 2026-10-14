@@ -2,7 +2,7 @@
  * music-manager.cpp - Mirrors the Music dock's playback into a native
  * OBS audio source on a global mixer channel
  *
- * Background (see SESSION_NOTES.md 2026-09-22): this plugin used to
+ * Background: this plugin used to
  * pin a second, independent browser_source (a headless CEF instance
  * playing the same page, logged out, with no state sync to the dock)
  * to a mixer channel. Its fader controlled silent audio and served no

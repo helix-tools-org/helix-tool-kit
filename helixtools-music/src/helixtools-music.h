@@ -13,7 +13,7 @@
  * dock, so its fader controlled silent/logged-out audio and served no
  * real function. It was also the source of the
  * OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING/_CHANGED freeze/crash
- * fixed 2026-09-18 (see SESSION_NOTES.md).
+ * fixed 2026-09-18.
  *
  * Replaced by MusicManager (music-manager.cpp): a native ffmpeg_source
  * driven by polling the overlay_data Supabase table the dock already

@@ -60,7 +60,7 @@ private:
 	 * these dashboards are SPAs whose routing doesn't always support
 	 * being loaded directly at an internal sub-page rather than reached
 	 * by clicking within the already-loaded app (confirmed reproducing on
-	 * both Twitch and Rumble Studio — see SESSION_NOTES.md 2026-09-23).
+	 * both Twitch and Rumble Studio).
 	 * The tradeoff, accepted deliberately: up to NUM_DASHBOARD_PLATFORMS
 	 * live CEF renderer processes at once instead of one. */
 	QVector<QCefWidget *> browsers;

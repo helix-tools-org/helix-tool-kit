@@ -11,8 +11,7 @@
  * never a fresh navigation — and persists the choice to the profile
  * config so the dock reopens on the same platform next time.
  *
- * This replaces an earlier design (see SESSION_NOTES.md 2026-09-23)
- * that shared a single QCefWidget across all platforms and tracked
+ * This replaces an earlier design that shared a single QCefWidget across all platforms and tracked
  * each one's last-visited URL, reloading it with setURL() on switch.
  * That turned out not to reliably preserve where you were: these
  * dashboards are SPAs, and cold-loading a saved deep link (e.g.

@@ -3,10 +3,8 @@
  *
  * Plain browser dock that loads Rumble Studio so users can manage their
  * Rumble channel settings, go live, check analytics, and adjust stream
- * configuration without leaving OBS. Ported from an integrated studio
- * app's "Rumble Studio" dock (OBSBasic_Browser.cpp's
- * InitRumbleStudioDock) — that dock was accidentally left out of the
- * first standalone-extraction pass.
+ * configuration without leaving OBS. (Superseded by helixtools-dashboard,
+ * which includes Rumble Studio; no longer packaged in the installer.)
  *
  * Copyright (C) 2026 HelixTools
  *

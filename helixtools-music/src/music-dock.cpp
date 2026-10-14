@@ -79,9 +79,9 @@ static const char *DISABLE_POPUPS_SCRIPT =
  * track twice (confirmed via the ~1.5s gap between them, matching
  * MusicManager's own poll interval). Muting every media element here
  * makes the native mixer channel the sole real audio path, matching the
- * original intent ("the Mixer fader ... controls the same audio you
- * hear from the dock" — SESSION_NOTES.md 2026-09-22 — which assumed
- * there'd only ever be one real playing instance). A MutationObserver
+ * original intent (the Mixer fader controls the same audio you hear
+ * from the dock), which assumed there'd only ever be one real playing
+ * instance. A MutationObserver
  * is needed because the player mounts a fresh <audio> element per
  * track rather than reusing one.
  */

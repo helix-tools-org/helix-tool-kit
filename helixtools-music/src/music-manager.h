@@ -2,9 +2,8 @@
  * music-manager.h - Mirrors the Music dock's playback into a native
  * OBS audio source on a global mixer channel
  *
- * See music-manager.cpp for the full design rationale (SESSION_NOTES.md
- * 2026-09-22 has the conversation history: why a second browser_source
- * was removed, and why this polls overlay_data instead).
+ * See music-manager.cpp for the full design rationale (why a second
+ * browser_source was removed, and why this polls overlay_data instead).
  *
  * Copyright (C) 2026 HelixTools
  *

@@ -2,9 +2,7 @@
  * helixtools-social.h - HelixTools Social Media dock (standalone)
  *
  * Sidebar-based browser dock for quick access to streaming/social
- * platform dashboards, ported from an integrated studio app's
- * "Social Media" dock (OBSBasic_Browser.cpp's
- * InitSocialMediaDock / socialMediaSites table).
+ * platform dashboards.
  *
  * Copyright (C) 2026 HelixTools
  *

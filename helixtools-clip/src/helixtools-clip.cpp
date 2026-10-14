@@ -142,8 +142,7 @@ HelixToolsClip::~HelixToolsClip()
 
 void HelixToolsClip::loadSettings()
 {
-    // --- HELIXTOOLS MODIFICATION START ---
-    // Description: Use profile config to match frontend Settings dialog (was global config)
+    // Use profile config to match frontend Settings dialog (was global config)
     config_t *config = obs_frontend_get_profile_config();
     if (!config)
         return;
@@ -166,13 +165,11 @@ void HelixToolsClip::loadSettings()
     showOverlay = config_has_user_value(config, "Clips", SETTINGS_SHOW_OVERLAY)
         ? config_get_bool(config, "Clips", SETTINGS_SHOW_OVERLAY)
         : true;
-    // --- HELIXTOOLS MODIFICATION END ---
 }
 
 void HelixToolsClip::saveSettings()
 {
-    // --- HELIXTOOLS MODIFICATION START ---
-    // Description: Use profile config to match frontend Settings dialog (was global config)
+    // Use profile config to match frontend Settings dialog (was global config)
     config_t *config = obs_frontend_get_profile_config();
     if (!config)
         return;
@@ -184,7 +181,6 @@ void HelixToolsClip::saveSettings()
     config_set_bool(config, "Clips", SETTINGS_SHOW_TOAST, showToast);
     config_set_bool(config, "Clips", SETTINGS_SHOW_OVERLAY, showOverlay);
     config_save(config);
-    // --- HELIXTOOLS MODIFICATION END ---
 }
 
 void HelixToolsClip::registerHotkeys()
@@ -210,8 +206,7 @@ void HelixToolsClip::registerHotkeys()
     hotkey30s = id30s;
     hotkey60s = id60s;
 
-    // --- HELIXTOOLS MODIFICATION START ---
-    // Description: Restore saved hotkey bindings from profile config on startup
+    // Restore saved hotkey bindings from profile config on startup
     // OBSBasic::CreateHotkeys only loads bindings for its own hotkeys, so
     // plugin-registered hotkeys must load their own saved bindings.
     auto loadSavedBinding = [](obs_hotkey_id id, const char *name) {
@@ -232,7 +227,6 @@ void HelixToolsClip::registerHotkeys()
 
     loadSavedBinding(hotkey30s, "helixtools_clip_30s");
     loadSavedBinding(hotkey60s, "helixtools_clip_60s");
-    // --- HELIXTOOLS MODIFICATION END ---
 
     blog(LOG_INFO, "[helixtools-clip] Hotkeys registered");
 }
@@ -261,8 +255,7 @@ void HelixToolsClip::triggerClip60s()
 
 void HelixToolsClip::createClip(int seconds)
 {
-    // --- HELIXTOOLS MODIFICATION START ---
-    // Description: Show user-visible status bar feedback for all error/success cases
+    // Show user-visible status bar feedback for all error/success cases
 
     if (!isStreaming) {
         showStatusMessage(QString("Clip failed: You are not currently streaming"));
@@ -327,7 +320,6 @@ void HelixToolsClip::createClip(int seconds)
     showStatusMessage(QString("Clip failed: Windows required"));
     emit clipFailed("Windows required");
 #endif
-    // --- HELIXTOOLS MODIFICATION END ---
 }
 
 bool HelixToolsClip::isCooldownActive() const
@@ -365,10 +357,7 @@ void HelixToolsClip::showStatusMessage(const QString &message)
 {
     /* OBS's main window is a real QMainWindow, and its status bar is a
      * standard QStatusBar reachable via QMainWindow::statusBar() — no
-     * OBS-specific API needed, so this works on vanilla OBS Studio (an
-     * earlier version of this called a "ShowStatusBarMessage" slot that
-     * only exists on a privately patched OBS fork; on a stock install
-     * that call just silently no-ops, since the method doesn't exist). */
+     * OBS-specific API needed, so this works on vanilla OBS Studio. */
     void *mainPtr = obs_frontend_get_main_window();
     if (mainPtr) {
         QMainWindow *mainWindow = static_cast<QMainWindow *>(mainPtr);
@@ -531,12 +520,10 @@ bool obs_module_load()
         return false;
     }
 
-    // --- HELIXTOOLS MODIFICATION START ---
-    // Description: Actually create the singleton (was calling instance() which returned nullptr)
+    // Actually create the singleton (was calling instance() which returned nullptr)
     if (!HelixToolsClip::instance_) {
         new HelixToolsClip();
     }
-    // --- HELIXTOOLS MODIFICATION END ---
 
     helixtools_clip_init_menu();
 

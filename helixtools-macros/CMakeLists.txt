@@ -33,7 +33,7 @@ target_link_libraries(helixtools-macros PRIVATE
 target_include_directories(helixtools-macros PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     # obs-websocket vendor API (obs-websocket-api.h), vendored locally so
-    # this plugin doesn't need the obs-studio fork's source tree present
+    # this plugin only needs OBS's public SDK, not obs-websocket's source tree
     ${CMAKE_CURRENT_SOURCE_DIR}/src/vendor
 )
 
