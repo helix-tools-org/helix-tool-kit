@@ -19,6 +19,7 @@
 
 #include "social-dock.h"
 #include "social-sites.h"
+#include "social-link-menu-script.h"
 #include "vendor/browser-panel.hpp"
 
 #include <obs-module.h>
@@ -96,6 +97,7 @@ SocialDock::SocialDock(QCef *cef_, QWidget *parent) : QWidget(parent), cef(cef_)
 					     true);
 	browser = cef->create_widget(this, initialUrl.toUtf8().constData(),
 				     cookies);
+	browser->setStartupScript(HELIXTOOLS_LINK_MENU_SCRIPT);
 	mainLayout->addWidget(browser, 1);
 
 	connect(sidebar, &QListWidget::currentItemChanged, this,

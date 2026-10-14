@@ -36,16 +36,14 @@ bool obs_module_load(void)
 		struct obs_source_info info = {0};
 		info.id = overlay_defs[i].source_id;
 		info.type = OBS_SOURCE_TYPE_INPUT;
-		/* OBS_SOURCE_CAP_DISABLED hides a source type from the
-		 * native "Add Source" (+) menu, without affecting
-		 * obs_source_create() — Push to Studio (helixtools-hub)
-		 * still creates these directly. These are meant to be
-		 * added via Push to Studio, not hand-picked from a flat
-		 * 60+ entry list with no per-platform grouping. */
+		/* Deliberately NOT OBS_SOURCE_CAP_DISABLED: that flag hides the
+		 * type from the native "Add Source" (+) menu, which also means a
+		 * source pushed from the Hub could never be found again to re-add
+		 * or add as "existing" later. Visible types are grouped in that
+		 * menu by the "HelixTools:" name prefix (see overlay_get_name()). */
 		info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_AUDIO |
 				    OBS_SOURCE_CUSTOM_DRAW |
-				    OBS_SOURCE_INTERACTION |
-				    OBS_SOURCE_CAP_DISABLED;
+				    OBS_SOURCE_INTERACTION;
 		info.get_name = overlay_get_name;
 		info.create = overlay_create;
 		info.destroy = overlay_destroy;
@@ -61,7 +59,10 @@ bool obs_module_load(void)
 		info.mouse_wheel = overlay_mouse_wheel;
 		info.key_click = overlay_key_click;
 		info.focus = overlay_focus;
-		info.icon_type = OBS_ICON_TYPE_CUSTOM;
+		/* These wrap a browser source, so use OBS's browser (globe)
+		 * icon; OBS_ICON_TYPE_CUSTOM with no icon renders as a blank
+		 * document in the Sources list. */
+		info.icon_type = OBS_ICON_TYPE_BROWSER;
 		info.type_data = (void *)&overlay_defs[i];
 
 		obs_register_source(&info);

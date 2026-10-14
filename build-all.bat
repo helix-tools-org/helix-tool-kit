@@ -29,6 +29,12 @@ REM obs-studio's own FindSIMDe.cmake finder module on the module path
 REM (it's not shipped as part of the installed libobs SDK itself).
 set MODULE_PATH=%OBS_ROOT%/cmake/finders
 
+REM MSBuild's file tracker (Tracker.exe) makes link.exe die with a random
+REM garbage exit code (MSB6006) on some Windows builds, which also breaks
+REM CMake's compiler detection. Nothing here needs incremental-build
+REM dependency tracking, so turn it off.
+set TrackFileAccess=false
+
 set PLUGIN=%1
 if "%PLUGIN%"=="" (
   echo Usage: build-all.bat ^<plugin-dir-name^>
