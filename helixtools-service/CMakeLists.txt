@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 cmake_minimum_required(VERSION 3.28)
-project(helixtools-service VERSION 0.1.0 LANGUAGES C CXX)
+project(helixtools-service VERSION 0.2.0 LANGUAGES C CXX)
 
 # --- Find OBS ---
 # When building out-of-tree, set CMAKE_PREFIX_PATH to an OBS libobs SDK/rundir:
@@ -21,12 +21,15 @@ add_library(helixtools-service MODULE
     src/helixtools-service.c
     src/rumble-service.c
     src/service-menu.cpp
+    src/update-checker.cpp
 )
 
 target_link_libraries(helixtools-service PRIVATE
     OBS::libobs
     OBS::obs-frontend-api
     Qt6::Widgets
+    winhttp
+    advapi32
 )
 
 target_include_directories(helixtools-service PRIVATE

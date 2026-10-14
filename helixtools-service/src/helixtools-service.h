@@ -53,3 +53,15 @@ void helixtools_service_init_menu(void);
 #ifdef __cplusplus
 }
 #endif
+
+/* update-checker.cpp - notify-only update check against the toolkit's
+ * GitHub releases. Init after the frontend is available; shutdown from
+ * obs_module_unload. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+void helixtools_update_init(void);
+void helixtools_update_shutdown(void);
+#ifdef __cplusplus
+}
+#endif

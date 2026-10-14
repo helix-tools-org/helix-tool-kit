@@ -31,6 +31,7 @@ bool obs_module_load(void)
 {
 	obs_register_service(&helixtools_rumble_service_info);
 	helixtools_service_init_menu();
+	helixtools_update_init();
 	blog(LOG_INFO, "[helixtools-service] Plugin loaded (v%s)",
 	     HELIXTOOLS_SERVICE_VERSION);
 	return true;
@@ -38,5 +39,6 @@ bool obs_module_load(void)
 
 void obs_module_unload(void)
 {
+	helixtools_update_shutdown();
 	blog(LOG_INFO, "[helixtools-service] Plugin unloaded");
 }
