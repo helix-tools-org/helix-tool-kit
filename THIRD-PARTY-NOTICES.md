@@ -33,8 +33,12 @@ repository or shipped in the Helix ToolKit installer.
 - **File installed:** `bin\64bit\tls\qschannelbackend.dll` (installed
   only with the Clip component; not stored in this repository)
 - **From:** the unmodified Qt 6.11.1 build bundled with OBS Studio's
-  dependencies, `obs-deps` release `2026-07-15`:
+  dependencies. The installer for OBS Studio 32 and earlier uses the
+  `obs-deps` release `2026-07-15`:
   <https://github.com/obsproject/obs-deps/releases/tag/2026-07-15>
+  The installer for OBS Studio 33 and newer uses the `obs-deps` release
+  `2026-10-23`:
+  <https://github.com/obsproject/obs-deps/releases/tag/2026-10-23>
 - **Qt source code:** <https://code.qt.io/cgit/qt/qtbase.git/> (tag
   `v6.11.1`), and <https://download.qt.io/official_releases/qt/>
 - **License:** GNU Lesser General Public License v3 (LGPL-3.0). The full
