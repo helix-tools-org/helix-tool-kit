@@ -1,8 +1,9 @@
-/* Vendored verbatim from obsproject/obs-studio's obs-browser plugin
- * (plugins/obs-browser/panel/browser-panel.hpp), licensed
- * GPL-2.0-or-later. Not original HelixTools code — reproduced here as
- * the public interface obs-browser exposes for embedding CEF panels
- * (used to implement this plugin's dock UI). No modifications made. */
+/* Vendored verbatim from obsproject/obs-browser (the obs-browser plugin
+ * in OBS Studio 33.0.1, commit d4db73e), file panel/browser-panel.hpp,
+ * licensed GPL-2.0-or-later. Not original HelixTools code — reproduced
+ * here as the public interface obs-browser exposes for embedding CEF
+ * panels (used to implement this plugin's dock UI). No modifications
+ * made. */
 
 #pragma once
 
@@ -48,16 +49,12 @@ public:
 	virtual void allowAllPopups(bool allow) = 0;
 	virtual void closeBrowser() = 0;
 	virtual void reloadPage() = 0;
-	virtual void goBack() = 0;
-	virtual void goForward() = 0;
 	virtual bool zoomPage(int direction) = 0;
 	virtual void executeJavaScript(const std::string &script) = 0;
-	virtual void setHidden(bool hidden) = 0;
 
 signals:
 	void titleChanged(const QString &title);
 	void urlChanged(const QString &url);
-	void popupRequested(const QString &url);
 };
 
 /* ------------------------------------------------------------------------- */
@@ -88,13 +85,15 @@ static inline void *get_browser_lib()
 #ifdef ENABLE_WAYLAND
 	isWayland = obs_get_nix_platform() == OBS_NIX_PLATFORM_WAYLAND;
 #endif
-	if (isWayland)
+	if (isWayland) {
 		return nullptr;
+	}
 
 	obs_module_t *browserModule = obs_get_module("obs-browser");
 
-	if (!browserModule)
+	if (!browserModule) {
 		return nullptr;
+	}
 
 	return obs_get_module_lib(browserModule);
 }
@@ -104,13 +103,15 @@ static inline QCef *obs_browser_init_panel(void)
 	void *lib = get_browser_lib();
 	QCef *(*create_qcef)(void) = nullptr;
 
-	if (!lib)
+	if (!lib) {
 		return nullptr;
+	}
 
 	create_qcef = (decltype(create_qcef))os_dlsym(lib, "obs_browser_create_qcef");
 
-	if (!create_qcef)
+	if (!create_qcef) {
 		return nullptr;
+	}
 
 	return create_qcef();
 }
@@ -120,13 +121,15 @@ static inline int obs_browser_qcef_version(void)
 	void *lib = get_browser_lib();
 	int (*qcef_version)(void) = nullptr;
 
-	if (!lib)
+	if (!lib) {
 		return 0;
+	}
 
 	qcef_version = (decltype(qcef_version))os_dlsym(lib, "obs_browser_qcef_version_export");
 
-	if (!qcef_version)
+	if (!qcef_version) {
 		return 0;
+	}
 
 	return qcef_version();
 }

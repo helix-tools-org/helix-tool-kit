@@ -37,6 +37,21 @@ fully open source, and by this being a swappable runtime plugin file (a
 user can replace it with their own Qt build of the same component at
 any time, same as any other Qt TLS backend plugin).
 
+## OBS 33+ copy (`obs33/qschannelbackend.dll`)
+
+The OBS 33+ installer ships a different file, extracted the same way:
+
+1. `obsproject/obs-studio` tag `33.0.1`'s `CMakePresets.json` pins its
+   Windows Qt6 dependency to `obs-deps` release `2026-10-23`.
+2. That release's `windows-deps-qt6-2026-10-23-x64.zip` contains
+   `plugins/tls/qschannelbackend.dll` (`FileVersion` `6.11.1.0`, same Qt
+   version as 32.2.2, but a separate build: the files are not
+   byte-identical).
+
+Source: `https://github.com/obsproject/obs-deps/releases/tag/2026-10-23`
+
+The OBS 32 installer keeps using the 2026-07-15 file above.
+
 ## Important: this is version-locked to OBS's currently-bundled Qt
 
 This fix works because it's byte-identical (well, matching build-key)
